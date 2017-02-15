@@ -8,6 +8,7 @@ import com.balaev.gradproj.repository.PassengerRepository;
 import com.balaev.gradproj.repository.RouteTimetablesRepository;
 import com.balaev.gradproj.repository.StationRepository;
 import com.balaev.gradproj.repository.UserRepository;
+import com.balaev.gradproj.service.api.RouteTimetablesService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,8 @@ public class BalaevGraduateProjectApplicationTests {
     private StationRepository stationRepository;
     @Autowired
     private RouteTimetablesRepository routeTimetablesRepository;
+    @Autowired
+    private RouteTimetablesService routeTimetablesService;
 
     @Test
     public void contextLoads() {
@@ -77,4 +80,46 @@ public class BalaevGraduateProjectApplicationTests {
         assertEquals(12, (long)routeTimetables.size());
     }
 
+    @Test
+    public void countStations() {
+        Long count = stationRepository.count();
+        assertEquals(10, (long) count);
+    }
+
+    @Test
+    public void countRouteTimetables() {
+        String departure = "2016-11-01 00:00:00";
+        String arrival = "2016-11-30 00:00:00";
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date startDate = null;
+        Date finishDate = null;
+        try {
+            startDate = dateFormat.parse(departure);
+            finishDate = dateFormat.parse(arrival);
+        } catch (ParseException e) {
+            System.out.println("ERROR IN PARSING");
+            e.printStackTrace();
+        }
+        List<RouteTimetables> routeTimetables = routeTimetablesRepository.findByDateDepartureAfterAndDateArrivalBeforeOrderByLine(startDate, finishDate);
+        assertEquals(6, (long) routeTimetables.size());
+    }
+
+    @Test
+    public void getShortestWay() throws Exception {
+        Station stationStart = stationRepository.findOne(1);
+        Station stationFinish = stationRepository.findOne(5);
+        String departure = "2016-11-01 00:00:00";
+        String arrival = "2016-11-30 00:00:00";
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date startDate = null;
+        Date finishDate = null;
+        try {
+            startDate = dateFormat.parse(departure);
+            finishDate = dateFormat.parse(arrival);
+        } catch (ParseException e) {
+            System.out.println("ERROR IN PARSING");
+            e.printStackTrace();
+        }
+        routeTimetablesService.getShortestWay(stationStart, stationFinish, startDate, finishDate);
+    }
 }
