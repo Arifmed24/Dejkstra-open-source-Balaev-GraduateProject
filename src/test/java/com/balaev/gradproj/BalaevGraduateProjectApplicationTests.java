@@ -108,7 +108,7 @@ public class BalaevGraduateProjectApplicationTests {
     public void getShortestWay() throws Exception {
         Station stationStart = stationRepository.findOne(1);
         Station stationFinish = stationRepository.findOne(5);
-        String departure = "2016-11-01 00:00:00";
+        String departure = "2016-10-01 00:00:00";
         String arrival = "2016-11-30 00:00:00";
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         Date startDate = null;

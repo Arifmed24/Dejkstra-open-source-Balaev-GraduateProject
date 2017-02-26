@@ -22,63 +22,88 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
 
     private static int INF = Integer.MAX_VALUE / 2;
 
-    private int countStations; //количество вершин в орграфе
-    private int countRouteTimetables; //количествое дуг в орграфе
     private Map<Integer, ArrayList<Integer>> adj; // кто с кем контактирует (ключ - станция,
-    //    private Map<Integer, Map<Integer, Double>> length; //КИЛОМЕТРАЖ СООТЕТСТВУЮЩЕЙ СМЕЖНОСТИ
-//    private Map<Integer, Map<Integer, ArrayList<ArrayList<Date>>>> dateArriving; //ДАТА ПРИБЫТИЯ
     private Map<Integer, Boolean> used; //массив для хранения информации о пройденных и не пройденных вершинах
     private Map<Integer, Double> dist; //массив для хранения расстояния от стартовой вершины
-    //массив предков, необходимых для восстановления кратчайшего пути из стартовой вершины
+    private Map<Integer, ArrayList<RouteTimetables>> stationArrivingRoutes; //массив предков, необходимых для восстановления кратчайшего пути из стартовой вершины
     private Map<Integer, Integer> pred;
     private Map<Integer, Map<Integer, ArrayList<RouteTimetables>>> lines;
     int start; //стартовая вершина, от которой ищется расстояние до всех других
 
+
+    List<Station> stations;
+    List<RouteTimetables> routeTimetables;
+
     @Override
     public List<RouteTimetables> getShortestWay(Station startStation, Station finishStation, Date startDate, Date finishDate) {
         prepareData(startStation, startDate, finishDate);
+        dejkstra(startStation.getIdStation(), startDate);
         return null;
     }
 
+    void dejkstra(int s, Date startDate) {
 
-    //найти самый короткий путь
-    //процедура запуска алгоритма Дейкстры из стартовой вершины
-//    private void dejkstra(int s) {
-//        dist[s] = 0; //кратчайшее расстояние до стартовой вершины равно 0
-//        for (int iter = 0; iter < countStations; ++iter) {
-//            int v = -1;
-//            int distV = INF;
-//            //выбираем вершину, кратчайшее расстояние до которого еще не найдено
-//            for (int i = 0; i < countStations; ++i) {
-//                if (used[i]) {
-//                    continue;
-//                }
-//                if (distV < dist[i]) {
-//                    continue;
-//                }
-//                v = i; //станция
-//                distV = dist[i]; //расстояние до станции
-//            }
-//            //рассматриваем все дуги, исходящие из найденной вершины
-//            for (int i = 0; i < adj[v].size(); ++i) {
-//                int u = adj[v].get(i); //станция, с которой связана
-//                int weightU = length[v].get(i); //вес
-//                // TODO: 15.02.17 добавить время (прибытия)
-//                //релаксация вершины
-//                if (dist[v] + weightU < dist[u]) { //+время из вершины
-//                    dist[u] = dist[v] + weightU;
-//                    pred[u] = v;
-//                }
-//            }
-//            //помечаем вершину v просмотренной, до нее найдено кратчайшее расстояние
-//            used[v] = true;
-//        }
-//    }
+        dist.put(s, (double) 0);
+        RouteTimetables departureDate = new RouteTimetables();
+        departureDate.setDateArrival(startDate);
+        stationArrivingRoutes.put(s, new ArrayList<>(Collections.singletonList(departureDate)));
 
 
+        for (int iter = 0; iter < stations.size(); ++iter) {
+            int idCurrentStation = -1; //id current station
+            Double distanceToCurrentStation = (double) INF; //dist to station
+
+            //БЕРЕМ СТАНЦИЮ
+            for (Station station : stations) {
+                if (used.get(station.getIdStation())) //если использовалась - берем следующую
+                    continue;
+                if (distanceToCurrentStation < dist.get(station.getIdStation())) { //и до нее самое короткое расстояние из имеющихся
+                    continue;
+                }
+                idCurrentStation = station.getIdStation(); // номер станции
+                distanceToCurrentStation = dist.get(station.getIdStation()); //расстояние до неё
+            }
+
+            for (int i = 0; i < adj.get(idCurrentStation).size(); ++i) { //все смежные пути
+                int connectedStationId = adj.get(idCurrentStation).get(i);
+                //расстояние до вершины
+                double weightU = lines.get(idCurrentStation).get(connectedStationId).get(0).getLine().getDistance();
+
+                if (dist.get(idCurrentStation) + weightU < dist.get(connectedStationId)) { //если путь короче
+                    for (RouteTimetables variant : lines.get(idCurrentStation).get(connectedStationId)) { //все варианты между станциями
+                        for (RouteTimetables routeTimetableArriving : stationArrivingRoutes.get(idCurrentStation)) { // все варианты прибытия
+                            if (routeTimetableArriving.getDateArrival().before(variant.getDateDeparture())) { // если дата выезда из А позже даты приезда в неё
+                                ArrayList<RouteTimetables> previousRT = stationArrivingRoutes.get(connectedStationId);
+                                if (previousRT.isEmpty()) {
+                                    stationArrivingRoutes.put(connectedStationId, new ArrayList<>(Collections.singletonList(variant)));
+                                } else {
+                                    if (!previousRT.contains(variant)) {
+                                        previousRT.add(variant);
+                                        stationArrivingRoutes.put(connectedStationId, previousRT);
+                                    }
+                                }
+                                pred.put(connectedStationId, idCurrentStation);
+                                dist.put(connectedStationId, dist.get(idCurrentStation) + weightU);
+                            }
+                        }
+                    }
+                }
+            }
+            //помечаем вершину idCurrentStation просмотренной, до нее найдено кратчайшее расстояние
+            used.put(idCurrentStation, true);
+        }
+    }
+
+    /**
+     * Prepare data for dejksta algorithm
+     *
+     * @param startStation station departure
+     * @param startDate    date departure
+     * @param finishDate   date arrival
+     */
     void prepareData(Station startStation, Date startDate, Date finishDate) {
-        List<Station> stations = stationService.getAllStations();
-        List<RouteTimetables> routeTimetables = getRouteTimetablesInPeriod(startDate, finishDate);
+        stations = stationService.getAllStations();
+        routeTimetables = getRouteTimetablesInPeriod(startDate, finishDate);
 
         start = startStation.getIdStation();
 
@@ -86,20 +111,24 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
         adj = new HashMap<>();
         lines = new HashMap<>();
         used = new HashMap<>();
-        pred = new HashMap<>();
+        stationArrivingRoutes = new HashMap<>();
         dist = new HashMap<>();
+        pred = new HashMap<>();
 
         //fill default
         for (Station station : stations) {
             adj.put(station.getIdStation(), new ArrayList<>());
             lines.put(station.getIdStation(), new HashMap<>());
             used.put(station.getIdStation(), false);
-            pred.put(station.getIdStation(), -1);
             dist.put(station.getIdStation(), (double) INF);
+            stationArrivingRoutes.put(station.getIdStation(), new ArrayList<>());
+            pred.put(station.getIdStation(), -1);
         }
 
         //fill adj and lines
         for (RouteTimetables routeTimetable : routeTimetables) {
+
+
             //берем список смежностей станции отправки этого отрезка
             ArrayList<Integer> connnectedStations = adj.get(routeTimetable.getLine().getStationDeparture().getIdStation());
             //если список пуст
@@ -135,6 +164,7 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
                 lines.put(routeTimetable.getLine().getStationDeparture().getIdStation(), currentLines);
             }
         }
+
     }
 
     List<RouteTimetables> getRouteTimetablesInPeriod(Date startDate, Date finishDate) {
