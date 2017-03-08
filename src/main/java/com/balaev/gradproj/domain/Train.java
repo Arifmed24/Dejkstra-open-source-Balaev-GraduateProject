@@ -4,7 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "train")
-public class Train {
+public class Train extends Throwable {
     public Train() {
     }
 

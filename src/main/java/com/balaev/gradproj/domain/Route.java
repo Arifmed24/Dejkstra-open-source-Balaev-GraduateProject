@@ -4,7 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "route")
-public class Route {
+public class Route extends Throwable {
     public Route() {
     }
 

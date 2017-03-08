@@ -1,6 +1,9 @@
 package com.balaev.gradproj.domain;
 
 public enum Role {
-    ADMIN,
-    USER
+    USER,
+    ADMIN;
+
+    Role() {
+    }
 }

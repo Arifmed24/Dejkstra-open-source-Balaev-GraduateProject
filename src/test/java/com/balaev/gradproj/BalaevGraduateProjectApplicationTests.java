@@ -1,13 +1,7 @@
 package com.balaev.gradproj;
 
-import com.balaev.gradproj.domain.Passenger;
-import com.balaev.gradproj.domain.RouteTimetables;
-import com.balaev.gradproj.domain.Station;
-import com.balaev.gradproj.domain.User;
-import com.balaev.gradproj.repository.PassengerRepository;
-import com.balaev.gradproj.repository.RouteTimetablesRepository;
-import com.balaev.gradproj.repository.StationRepository;
-import com.balaev.gradproj.repository.UserRepository;
+import com.balaev.gradproj.domain.*;
+import com.balaev.gradproj.repository.*;
 import com.balaev.gradproj.service.api.RouteTimetablesService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +30,10 @@ public class BalaevGraduateProjectApplicationTests {
     @Autowired
     private StationRepository stationRepository;
     @Autowired
+    private RouteRepository routeRepository;
+    @Autowired
+    private TimetableRepository timetableRepository;
+    @Autowired
     private RouteTimetablesRepository routeTimetablesRepository;
     @Autowired
     private RouteTimetablesService routeTimetablesService;
@@ -45,14 +43,18 @@ public class BalaevGraduateProjectApplicationTests {
     }
 
     @Test
-    public void loadUsers() {
-        List<User> users = (List<User>) userRepository.findAll();
-        assertEquals("Arif Balaev", users.get(0).getFio());
-    }
-
-    @Test
     public void getPassengerByFullName() {
-        Passenger passenger = passengerRepository.findByLastNameAndFirstName("Filippova", "Daria");
+
+        String birth_s = "1995-03-08";
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date birth = null;
+        try {
+            birth = dateFormat.parse(birth_s);
+        } catch (ParseException e) {
+            System.out.println("ERROR IN PARSING");
+            e.printStackTrace();
+        }
+        Passenger passenger = passengerRepository.findByLastNameAndFirstNameAndBirth("Filippova", "Daria", birth);
         assertEquals(2, (long) passenger.getIdPassenger());
     }
 
@@ -63,7 +65,7 @@ public class BalaevGraduateProjectApplicationTests {
     }
 
     @Test
-    public void getRouteTimetablesBetweenTwoDates(){
+    public void getRouteTimetablesBetweenTwoDates() {
         String departure = "2016-11-01 00:00:00";
         String arrival = "2016-11-30 00:00:00";
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -76,8 +78,8 @@ public class BalaevGraduateProjectApplicationTests {
             System.out.println("ERROR IN PARSING");
             e.printStackTrace();
         }
-        List<RouteTimetables> routeTimetables = routeTimetablesRepository.findByDateDepartureAfterAndDateArrivalBefore(startDate,finishDate);
-        assertEquals(12, (long)routeTimetables.size());
+        List<RouteTimetables> routeTimetables = routeTimetablesRepository.findByDateDepartureAfterAndDateArrivalBefore(startDate, finishDate);
+        assertEquals(12, (long) routeTimetables.size());
     }
 
     @Test
@@ -108,7 +110,7 @@ public class BalaevGraduateProjectApplicationTests {
     public void getShortestWay() throws Exception {
         Station stationStart = stationRepository.findOne(1);
         Station stationFinish = stationRepository.findOne(5);
-        String departure = "2016-10-01 00:00:00";
+        String departure = "2016-11-01 00:00:00";
         String arrival = "2016-11-30 00:00:00";
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         Date startDate = null;
@@ -122,4 +124,19 @@ public class BalaevGraduateProjectApplicationTests {
         }
         routeTimetablesService.getShortestWay(stationStart, stationFinish, startDate, finishDate);
     }
+
+    @Test
+    public void getAllRoutes() throws Exception {
+        List<Route> routes = routeRepository.findAll();
+        assertEquals(8, routes.size());
+    }
+
+    @Test
+    public void getTimetabeByStations() {
+        Station begin = stationRepository.findBystationName("Pavlovsk");
+        Station end = stationRepository.findBystationName("Pupuishevo");
+        Timetable result = timetableRepository.readByStations(begin, end);
+        assertEquals(5, (long) result.getIdLine());
+    }
+
 }

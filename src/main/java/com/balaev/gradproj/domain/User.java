@@ -1,19 +1,19 @@
 package com.balaev.gradproj.domain;
 
-import javax.persistence.*;
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created in 2017 year.
- *
- * @autor Arif Balaev
- */
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "iduser")
+    @Column(name = "user_id")
     private Integer idUser;
 
     @Column(name = "login")
@@ -22,12 +22,21 @@ public class User {
     @Column(name = "password")
     private String password;
 
-    @Column(name = "role")
+    @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role roles;
 
-    @Column(name = "fio ")
-    private String fio;
+    @Column(name = "name")
+    private String name;
+
+    public void addTicket(Ticket ticket) {
+        ticket.setUser(this);
+        tickets.add(ticket);
+    }
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
+    private
+    Set<Ticket> tickets = new HashSet<>();
 
     public User() {
     }
@@ -40,14 +49,6 @@ public class User {
         this.idUser = idUser;
     }
 
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -56,19 +57,27 @@ public class User {
         this.password = password;
     }
 
-    public Role getRole() {
-        return role;
+    public String getName() {
+        return name;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getFio() {
-        return fio;
+    public String getLogin() {
+        return login;
     }
 
-    public void setFio(String fio) {
-        this.fio = fio;
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public Role getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Role roles) {
+        this.roles = roles;
     }
 }

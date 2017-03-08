@@ -1,0 +1,264 @@
+body {
+    min-height: 600px;
+    margin: 0;
+    padding: 0;
+    background-color: white
+}
+
+body .wrapper {
+    overflow: hidden;
+    background-color: #f2da9c;
+    border-left: 1px solid #95520e;
+    border-right: 1px solid #95520e;
+    border-collapse: collapse
+}
+
+body .main_header {
+    text-align: center;
+    font-size: 4em;
+    text-shadow: 2px 2px 4px #fff, -2px -2px 4px #fff;
+    background-color: #f7bc32;
+    color: #95520e;
+    height: 100px;
+    line-height: 100px;
+    box-shadow: 0 0 10px 3px #f7bc32;
+    margin-bottom: 7px
+}
+
+body .main_menu {
+    height: 80px;
+    width: 100%;
+    position: relative
+}
+
+body .main_menu a {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    width: 16.66666667%;
+    text-decoration: none;
+    box-sizing: border-box;
+    line-height: 60px
+}
+
+body .main_menu a div {
+    display: inline-block;
+    width: 100%;
+    color: #95520e;
+    border-collapse: collapse;
+    background-color: white;
+    font-size: 20px;
+    border: 1px solid black;
+    text-align: center;
+    transition: all .25s ease-in
+}
+
+body .main_menu a:first-child {
+    border-left: none
+}
+
+body .main_menu a:hover {
+    text-decoration: none
+}
+
+body .main_menu a:hover div {
+    background-color: #95520e;
+    color: #f2da9c
+}
+
+body .main_menu a:last-child:hover div {
+    background-color: transparent
+}
+
+body .main_menu a:not(:first-child) {
+    margin-left: -5px
+}
+
+body .main_menu a:last-child {
+    position: absolute;
+    top: -18px;
+    right: 0px
+}
+
+body .main_menu a:last-child div {
+    border: none
+}
+
+body .main_menu .train_head {
+    width: 100%;
+    height: 100px;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-size: contain
+}
+
+body .main_body {
+    min-height: 500px
+}
+
+body .main_body .body_header h1 {
+    font-size: 50px;
+    color: black;
+    text-align: center !important
+}
+
+body .main_body .body_header_small h1 {
+    font-size: 40px;
+    color: black;
+    text-align: center !important
+}
+
+body .main_body .rr_new_button {
+    height: 40px
+}
+
+body .main_body .rr_new_button div {
+    cursor: pointer;
+    font-size: 20px;
+    margin-right: 20px;
+    display: inline-block;
+    float: right;
+    width: 150px;
+    line-height: 40px;
+    text-align: center;
+    background-color: #95520e;
+    background-image: none;
+    color: #f7bc32
+}
+
+body .main_body .rr_new_button div a {
+    text-decoration: none;
+    color: inherit
+}
+
+body .main_body .rr_table {
+    padding: 20px
+}
+
+body .main_body .rr_table table {
+    width: 100%;
+    text-align: center;
+    border-collapse: collapse
+}
+
+body .main_body .rr_table table th {
+    font-size: 28px;
+    color: black;
+    text-align: center;
+    border: 2px solid #95520e
+}
+
+body .main_body .rr_table table td {
+    font-size: 20px;
+    text-align: center;
+    padding: 8px;
+    color: black;
+    border: 2px solid #95520e
+}
+
+body .main_body .rr_table table td .rr_button {
+    display: inline-block;
+    width: 40%
+}
+
+body .main_body .rr_table table td .rr_button div {
+    margin-bottom: 5px;
+    cursor: pointer
+}
+
+body .main_body .rail_form {
+    padding: 30px
+}
+
+body .main_body .rail_form form div {
+    margin: 0 auto;
+    width: 70%;
+    margin-bottom: 20px
+}
+
+body .main_body .rail_form form div label {
+    text-align: left;
+    display: block;
+    font-size: 16px;
+    color: black
+}
+
+body .main_body .rail_form form div input, body .main_body .rail_form form div select {
+    width: 100%;
+    color: black
+}
+
+body .main_body .rail_form form div select {
+    height: 30px;
+    font-size: 20px
+}
+
+body .main_body .rail_form form .form_submit input {
+    font-size: 20px;
+    width: 20%;
+    float: left
+}
+
+.fill_new_route table tr:nth-child(1n) td {
+    border-top: none;
+}
+
+.fill_new_route table tr:nth-child(2n) td {
+    border-bottom: none;
+}
+
+.fill_new_route table tr:nth-last-child td {
+    border-top: 2px solid #95520e !important;
+}
+
+.double-button button {
+    font-size: 20px;
+    /*width: 20%;*/
+    float: left
+}
+
+.double-button button:last-child {
+    float: right !important;
+}
+
+body footer {
+    width: 100%;
+    height: 40px;
+    background: #f7bc32;
+    box-shadow: 0 0 10px 3px #f7bc32
+}
+
+.create_route {
+    width: 100% !important;
+    margin-top: 3% !important;
+}
+
+.create_route button {
+    background: transparent;
+    width: 100%;
+}
+
+#mainWrapper {
+    /*height: 720px; Without explicit px values, % in children's does not work*/
+    height: 100vh; /*with Viewport-Percentage, we can handles all devices screens  */
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}
+
+.login-container {
+    margin-top: 100px;
+    background-color: floralwhite;
+    width: 40%;
+    left: 30%;
+    position: absolute;
+}
+
+.login-card {
+    width: 80%;
+    margin: auto;
+}
+
+.login-form {
+    padding: 10%;
+}

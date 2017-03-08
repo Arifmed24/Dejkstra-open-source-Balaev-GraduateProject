@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "passenger")
-public class Passenger {
+public class Passenger extends Throwable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

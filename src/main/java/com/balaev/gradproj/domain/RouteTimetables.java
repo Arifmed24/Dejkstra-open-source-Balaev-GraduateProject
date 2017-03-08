@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "route_timetables")
-public class RouteTimetables {
+public class RouteTimetables extends Throwable {
     public RouteTimetables() {
     }
 
@@ -103,5 +103,15 @@ public class RouteTimetables {
 
     public void setTickets(Set<Ticket> tickets) {
         this.tickets = tickets;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                " from=" + line.getStationDeparture().getStationName() +
+                ", to=" + line.getStationArrival().getStationName() +
+                ", dateDeparture=" + dateDeparture +
+                ", dateArrival=" + dateArrival +
+                '}';
     }
 }

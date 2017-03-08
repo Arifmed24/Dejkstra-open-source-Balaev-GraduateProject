@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "ticket")
-public class Ticket {
+public class Ticket extends Throwable {
     public Ticket() {
     }
 
