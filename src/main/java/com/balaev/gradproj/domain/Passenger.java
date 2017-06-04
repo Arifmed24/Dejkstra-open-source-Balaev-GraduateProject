@@ -1,7 +1,5 @@
 package com.balaev.gradproj.domain;
 
-
-
 import javax.persistence.*;
 import java.util.Date;
 

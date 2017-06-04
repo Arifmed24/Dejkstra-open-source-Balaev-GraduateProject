@@ -84,6 +84,7 @@ public class TicketController {
                     ticket.setPrice(t.getPrice());
                     ticket.setTicketTrain(t.getTicketTrain());
                     ticket.setRouteTimetables(ticketWay);
+                    User user1 = (User) request.getSession().getAttribute("user");
                     ((User) request.getSession().getAttribute("user")).addTicket(ticket);
                     ticket = ticketService.createTicket(ticket);
 

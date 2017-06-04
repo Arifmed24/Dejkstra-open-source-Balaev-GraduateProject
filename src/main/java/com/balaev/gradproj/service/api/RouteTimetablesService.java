@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface RouteTimetablesService {
-    List<RouteTimetables> getShortestWay(Station startStation, Station finishStation, Date startDate, Date finishDate);
+    List<List<RouteTimetables>> getShortestWay(Station startStation, Station finishStation, Date startDate, Date finishDate);
 
     RouteTimetables createRoutetimetable(RouteTimetables routeTimetables);
 
@@ -19,7 +19,7 @@ public interface RouteTimetablesService {
 
     Map<Integer, List<Integer>> getRoutes();
 
-    List<List<RouteTimetables>> findWay(Station stationBegin, Station stationEnd, Date dateBegin, Date dateEnd);
+//    List<List<RouteTimetables>> findWay(Station stationBegin, Station stationEnd, Date dateBegin, Date dateEnd);
 
     RouteTimetables updateRouteTimetable(RouteTimetables routeTimetables);
 

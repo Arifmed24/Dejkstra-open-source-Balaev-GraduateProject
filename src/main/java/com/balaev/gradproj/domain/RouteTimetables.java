@@ -27,18 +27,18 @@ public class RouteTimetables extends Throwable {
     @Column(name = "number_in_route", nullable = false)
     private Integer numberInRoute;
 
-    @Column(name = "date_departure", columnDefinition="DATETIME", nullable = false)
+    @Column(name = "date_departure", columnDefinition = "DATETIME", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateDeparture;
 
-    @Column(name = "date_arrival", nullable = false, columnDefinition="DATETIME")
+    @Column(name = "date_arrival", nullable = false, columnDefinition = "DATETIME")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateArrival;
 
     @Column(name = "free_seats", nullable = false)
     private Integer freeSeats;
 
-    @ManyToMany(mappedBy = "routeTimetables",fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "routeTimetables", fetch = FetchType.EAGER)
     private Set<Ticket> tickets = new HashSet<>();
 
     public Integer getIdEvent() {
@@ -103,15 +103,5 @@ public class RouteTimetables extends Throwable {
 
     public void setTickets(Set<Ticket> tickets) {
         this.tickets = tickets;
-    }
-
-    @Override
-    public String toString() {
-        return "{" +
-                " from=" + line.getStationDeparture().getStationName() +
-                ", to=" + line.getStationArrival().getStationName() +
-                ", dateDeparture=" + dateDeparture +
-                ", dateArrival=" + dateArrival +
-                '}';
     }
 }

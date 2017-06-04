@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = BalaevGraduateProjectApplication.class)
@@ -85,7 +86,7 @@ public class BalaevGraduateProjectApplicationTests {
     @Test
     public void countStations() {
         Long count = stationRepository.count();
-        assertEquals(10, (long) count);
+        assertTrue(count > 10);
     }
 
     @Test
@@ -108,10 +109,10 @@ public class BalaevGraduateProjectApplicationTests {
 
     @Test
     public void getShortestWay() throws Exception {
-        Station stationStart = stationRepository.findOne(1);
-        Station stationFinish = stationRepository.findOne(5);
-        String departure = "2016-11-01 00:00:00";
-        String arrival = "2016-11-30 00:00:00";
+        Station stationStart = stationRepository.findOne(2);
+        Station stationFinish = stationRepository.findOne(4);
+        String departure = "2017-07-01 00:00:00";
+        String arrival = "2017-07-15 00:00:00";
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         Date startDate = null;
         Date finishDate = null;

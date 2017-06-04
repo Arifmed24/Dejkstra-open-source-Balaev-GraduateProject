@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <link rel="icon" href="/resources/img/train.png">
+    <link rel="icon" href="/img/train.png">
     <title>Registration</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
@@ -68,6 +68,6 @@
     </div>
 </div>
 <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-<script type="text/javascript" src="/resources/js/materialize.min.js"></script>
+<script type="text/javascript" src="/js/materialize.min.js"></script>
 </body>
 </html>

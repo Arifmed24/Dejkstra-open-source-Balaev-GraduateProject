@@ -24,7 +24,7 @@ public class User {
 
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role roles;
+    private Role role;
 
     @Column(name = "name")
     private String name;
@@ -73,11 +73,11 @@ public class User {
         this.login = login;
     }
 
-    public Role getRoles() {
-        return roles;
+    public Role getRole() {
+        return role;
     }
 
-    public void setRoles(Role roles) {
-        this.roles = roles;
+    public void setRole(Role roles) {
+        this.role = roles;
     }
 }

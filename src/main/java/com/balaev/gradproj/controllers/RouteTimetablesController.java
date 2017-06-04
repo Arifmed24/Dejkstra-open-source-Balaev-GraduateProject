@@ -67,7 +67,7 @@ public class RouteTimetablesController {
                     e.printStackTrace();
                 }
                 if (search.equals("ways")) {
-                    List<List<RouteTimetables>> ways = routeTimetablesService.findWay(stationDep, stationArr, dateDep, dateArr);
+                    List<List<RouteTimetables>> ways = routeTimetablesService.getShortestWay(stationDep, stationArr, dateDep, dateArr);
                     List<Ticket> tickets = ticketService.getTicketsFromRtLists(ways);
                     request.getSession().setAttribute("ways", ways);
                     request.getSession().setAttribute("tickets", tickets);

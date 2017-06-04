@@ -5,6 +5,10 @@
 <head>
     <link rel="icon" href="/img/train.jpg">
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/css/railroad_main.css">
+    <link rel="stylesheet" href="/css/bootstrap-datetimepicker_min.css">
     <script src="/js/jquery-1.11.1.min.js"></script>
     <script src="/js/moment-with-locales.min.js"></script>
     <script src="/js/bootstrap.js"></script>

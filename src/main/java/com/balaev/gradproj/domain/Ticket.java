@@ -41,7 +41,7 @@ public class Ticket extends Throwable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date arrivalDate;
 
-    @Column(name="price", columnDefinition="Decimal(19,4)")
+    @Column(name = "price", columnDefinition = "Decimal(19,4)")
     private java.math.BigDecimal price;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -50,9 +50,9 @@ public class Ticket extends Throwable {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "booked_timetables", joinColumns = {
-            @JoinColumn(name = "ticket_id", nullable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "event_id",
-                    nullable = false) })
+            @JoinColumn(name = "ticket_id", nullable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "event_id",
+                    nullable = false)})
     private Set<RouteTimetables> routeTimetables = new HashSet<>();
 
     public Integer getIdTicket() {

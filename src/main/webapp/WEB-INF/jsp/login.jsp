@@ -15,19 +15,19 @@
             <div class="login-form">
                 <c:url var="loginUrl" value="/login"/>
                 <form action="${loginUrl}" method="post" class="form-horizontal">
-                    <c:if test="${param.error != null}">
+                    <c:if test="${!(empty error)}">
                         <div class="alert alert-danger">
                             <p>Invalid username and password.</p>
                         </div>
                     </c:if>
-                    <c:if test="${param.logout != null}">
+                    <c:if test="${!(empty logout)}">
                         <div class="alert alert-success">
                             <p>You have been logged out successfully.</p>
                         </div>
                     </c:if>
                     <div class="input-group input-sm">
                         <label class="input-group-addon" for="username"><i class="fa fa-user"></i></label>
-                        <input type="text" class="form-control" id="username" name="userLogin"
+                        <input type="text" class="form-control" id="username" name="login"
                                placeholder="Enter Username" required>
                     </div>
                     <div class="input-group input-sm">
@@ -35,7 +35,6 @@
                         <input type="password" class="form-control" id="password" name="password"
                                placeholder="Enter Password" required>
                     </div>
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
 
                     <div class="form-actions">
                         <input type="submit"

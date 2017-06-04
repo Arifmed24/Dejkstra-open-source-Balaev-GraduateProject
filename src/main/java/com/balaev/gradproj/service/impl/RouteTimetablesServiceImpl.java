@@ -33,24 +33,57 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
 
     private static int INF = Integer.MAX_VALUE / 2;
 
-    private Map<Integer, ArrayList<Integer>> adj; // кто с кем контактирует (ключ - станция,
+    private Map<Integer, ArrayList<Integer>> adj; // кто с кем контактирует (ключ - станция, массив - контакты)
     private Map<Integer, Boolean> used; //массив для хранения информации о пройденных и не пройденных вершинах
     private Map<Integer, Double> dist; //массив для хранения расстояния от стартовой вершины
-    private Map<Integer, ArrayList<RouteTimetables>> stationArrivingRoutes; //массив предков, необходимых для восстановления кратчайшего пути из стартовой вершины
-    private Map<Integer, Integer> pred;
-    private Map<Integer, Map<Integer, ArrayList<RouteTimetables>>> lines;
-    int start; //стартовая вершина, от которой ищется расстояние до всех других
+    private Map<Integer, Long> duration;//массив для хранения затраченного времени от стартовой вершины
+    private Map<Integer, ArrayList<RouteTimetables>> stationArrivingRoutes; //отрезки, чьих концовкой является данная станция
+    private Map<Integer, Integer> pred; //хранение предыдущей вершины
+    private Map<Integer, Map<Integer, ArrayList<RouteTimetables>>> lines; //отрезки между двумя станциями
 
-
-    List<Station> stations;
-    List<RouteTimetables> routeTimetables;
+    private Station stationBegin;
+    private List<Station> stations;
+    private List<List<RouteTimetables>> ways;
 
     @Override
-    public List<RouteTimetables> getShortestWay(Station startStation, Station finishStation, Date startDate, Date finishDate) {
-        prepareData(startStation, startDate, finishDate);
+    public List<List<RouteTimetables>> getShortestWay(Station startStation, Station finishStation, Date startDate, Date finishDate) {
+        stationBegin = startStation;
+        prepareData(startDate, finishDate);
         dejkstra(startStation.getIdStation(), startDate);
-        printData();
-        return null;
+//        dejkstraByTime(startStation.getIdStation(), startDate);
+        return getWays(finishStation);
+    }
+
+    List<List<RouteTimetables>> getWays(Station finishStation) {
+        ways = new ArrayList<>();
+        prepareListOfVariants(finishStation.getIdStation());
+        deleteSimilarVariants();
+        return ways;
+    }
+
+    private void prepareListOfVariants(int station) {
+        for (int child = 0; child < stationArrivingRoutes.get(station).size(); child++) {
+            if (stationArrivingRoutes.get(station).get(child).getLine().getStationDeparture().getIdStation() != stationBegin.getIdStation()) {
+                prepareListOfVariants(stationArrivingRoutes.get(station).get(child).getLine().getStationDeparture().getIdStation());
+                fill(stationArrivingRoutes.get(station).get(child));
+            } else {
+                ways.add(new ArrayList<>(Collections.singletonList(stationArrivingRoutes.get(station).get(child))));
+            }
+        }
+    }
+
+    private void deleteSimilarVariants() {
+        Set<List<RouteTimetables>> hs = new HashSet<>();
+        hs.addAll(ways);
+        ways.clear();
+        ways.addAll(hs);
+    }
+
+    private void fill(RouteTimetables nextRoutetimetable) {
+        for (List<RouteTimetables> way : ways) {
+            if (Objects.equals(way.get(way.size() - 1).getLine().getStationArrival().getIdStation(), nextRoutetimetable.getLine().getStationDeparture().getIdStation()) && way.get(way.size() - 1).getDateArrival().before(nextRoutetimetable.getDateDeparture()))
+                way.add(nextRoutetimetable);
+        }
     }
 
     @Override
@@ -116,128 +149,6 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
         }
         LOG.info("finish getting all routes");
         return routes;
-    }
-
-    @Override
-    public List<List<RouteTimetables>> findWay(Station stationBegin, Station stationEnd, Date dateBegin, Date dateEnd) {
-        List<List<RouteTimetables>> result = new ArrayList<>();
-        Map<Integer, List<Integer>> routes = this.getRoutes();
-        int stationBeginId = stationBegin.getIdStation();
-        int stationEndId = stationEnd.getIdStation();
-        //first segments in variants
-        List<RouteTimetables> startLines = null;
-        int size = result.size();
-        LOG.info("finding variants of ways");
-        //take a map of all routes
-        for (Map.Entry<Integer, List<Integer>> entry : routes.entrySet()) {
-            //flags
-            int start = -1, finish = -1;
-            //indexes of stations in route
-            int sj = -1, fj = -1;
-            //go through each of route
-            for (int i = 0; i < entry.getValue().size(); i++) {
-                //if station in route equals stationBegin, record index of station to sj
-                if (stationBeginId == entry.getValue().get(i)) {
-                    start = entry.getValue().get(i);
-                    sj = i;
-                }
-                //if station in route equals stationEnd, record index of station to fj
-                if (stationEndId == entry.getValue().get(i)) {
-                    finish = entry.getValue().get(i);
-                    fj = i;
-                }
-            }
-            //if route have this stations and start station stays earlier than finish station
-            if (start != -1 && finish != -1 && sj < fj) {
-                //take all segments (timetables) in route between start and finish stations
-                for (int i = sj + 1; i < fj + 1; i++) {
-                    //if this first segment
-                    if (i == sj + 1) {
-                        //take all first segments in all graphics of this route
-                        //segments must have free seats
-                        startLines = routeTimetablesRepository.getRouteTimetableByRouteAndNumberInRoute(routeRepository.findOne(entry.getKey()), i, dateBegin, dateEnd);
-                        //each of segments put in new array list (future result)
-                        for (RouteTimetables rt : startLines) {
-                            List<RouteTimetables> way = new ArrayList<>();
-                            way.add(rt);
-                            LOG.info("variant created");
-                            result.add(way);
-                        }
-                        //if this not first segment
-                    } else {
-                        if (startLines.size() != 0) {
-                            List<RouteTimetables> nextLines;
-                            //take all segments with this index in all graphics of this route
-                            //segments must have free seats
-                            nextLines = routeTimetablesRepository.getRouteTimetableByRouteAndNumberInRoute(routeRepository.findOne(entry.getKey()), i, dateBegin, dateEnd);
-                            //go through all segments (this segment is determined number in route - routeTimetable
-                            for (RouteTimetables line : nextLines) {
-                                //go through variants
-                                for (List<RouteTimetables> list : result) {
-                                    //if variant doesn't have this segment
-                                    if (line.getNumberInRoute() - list.get(list.size() - 1).getNumberInRoute() == 1) {
-                                        //if date arrival of this segment before date arrival of last segment in variant
-                                        if (line.getDateDeparture().after(list.get(list.size() - 1).getDateDeparture())) {
-                                            if (list.get(list.size() - 1).getLine().getStationArrival() != line.getLine().getStationArrival())
-                                                //add in variant
-                                                list.add(line);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                //if result size has changed
-                if (result.size() != size) {
-                    //check variants
-                    int count = fj - sj;
-                    //present time
-                    Date now = new Date();
-                    /*for (Iterator<List<RouteTimetables>> iterator = result.iterator(); iterator.hasNext(); ) {
-                        List<RouteTimetables> variant = iterator.next();
-                        //if variant not completed
-                        if (variant.size() != count) {
-                            LOG.info("variant was incorrect and deleted");
-                            //remove this variant
-                            iterator.remove();
-                        } else {
-                            LOG.info("variant is correct");
-                        }
-                        //if first segment in variant is earlier than 10 minutes than real time
-                        if ((int) ((variant.get(0).getDateDeparture().getTime() / MILLIS_IN_MIN) - now.getTime() / MILLIS_IN_MIN) < 10) {
-                            LOG.info("variant started earlier than 10 minutes before first row started");
-                            //remove this variant
-                            iterator.remove();
-                        } else {
-                            LOG.info("start time of variant is correct");
-                        }
-                    }*/
-                    //go through new variants
-                    for (int i = result.size(); i > size; i--) {
-                        List<RouteTimetables> variant = result.get(i - 1);
-                        if (variant.size() != count) {
-                            LOG.info("variant was incorrect and deleted");
-                            //remove this variant
-                            result.remove(i - 1);
-                        } else {
-                            LOG.info("variant is correct");
-                        }
-                        //if first segment in variant is earlier than 10 minutes than real time
-                        if ((int) ((variant.get(0).getDateDeparture().getTime() / MILLIS_IN_MIN) - now.getTime() / MILLIS_IN_MIN) < 10) {
-                            LOG.info("variant started earlier than 10 minutes before first row started");
-                            //remove this variant
-                            result.remove(i - 1);
-                        } else {
-                            LOG.info("start time of variant is correct");
-                        }
-                    }
-                }
-                size = result.size();
-            }
-        }
-        LOG.info("finished finding");
-        return result;
     }
 
     @Override
@@ -426,20 +337,17 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
      * @param s         id of start station
      * @param startDate begining date of finding way
      */
-    void dejkstra(int s, Date startDate) {
+    private void dejkstra(int s, Date startDate) {
 
         dist.put(s, (double) 0);
         RouteTimetables departureDate = new RouteTimetables();
         departureDate.setDateArrival(startDate);
         stationArrivingRoutes.put(s, new ArrayList<>(Collections.singletonList(departureDate)));
 
-
         for (int iter = 0; iter < stations.size(); ++iter) {
             int idCurrentStation = -1; //id current station
             Double distanceToCurrentStation = (double) INF; //dist to station
-
-            //БЕРЕМ СТАНЦИЮ
-            for (Station station : stations) {
+            for (Station station : stations) { //БЕРЕМ СТАНЦИЮ
                 if (used.get(station.getIdStation())) //если использовалась - берем следующую
                     continue;
                 if (distanceToCurrentStation < dist.get(station.getIdStation())) { //и до нее самое короткое расстояние из имеющихся
@@ -448,7 +356,6 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
                 idCurrentStation = station.getIdStation(); // номер станции
                 distanceToCurrentStation = dist.get(station.getIdStation()); //расстояние до неё
             }
-
             for (int i = 0; i < adj.get(idCurrentStation).size(); ++i) { //все смежные пути
                 int connectedStationId = adj.get(idCurrentStation).get(i);
                 //расстояние до вершины
@@ -479,96 +386,108 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
         }
     }
 
-    /**
-     * Prepare data for dejksta algorithm
-     *
-     * @param startStation station departure
-     * @param startDate    date departure
-     * @param finishDate   date arrival
-     */
-    void prepareData(Station startStation, Date startDate, Date finishDate) {
-        stations = stationService.getAllStations();
-        routeTimetables = getRouteTimetablesInPeriod(startDate, finishDate);
 
-        start = startStation.getIdStation();
-
-        //initializing Maps
+    private void initPropertties() {
         adj = new HashMap<>();
         lines = new HashMap<>();
         used = new HashMap<>();
         stationArrivingRoutes = new HashMap<>();
         dist = new HashMap<>();
+        duration = new HashMap<>();
         pred = new HashMap<>();
+    }
 
-        //fill default
+    private void fillPropertiesWithDefaultValues() {
         for (Station station : stations) {
             adj.put(station.getIdStation(), new ArrayList<>());
             lines.put(station.getIdStation(), new HashMap<>());
             used.put(station.getIdStation(), false);
             dist.put(station.getIdStation(), (double) INF);
+            duration.put(station.getIdStation(), (long) INF);
             stationArrivingRoutes.put(station.getIdStation(), new ArrayList<>());
             pred.put(station.getIdStation(), -1);
         }
+    }
+
+    private ArrayList<Integer> getConnectedStationsOfDepartureStationInTimtable(RouteTimetables routeTimetable) {
+        return adj.get(routeTimetable.getLine().getStationDeparture().getIdStation());
+    }
+
+    private Integer getDepartureOfTimetable(RouteTimetables routeTimetable) {
+        return routeTimetable.getLine().getStationDeparture().getIdStation();
+    }
+
+    private Integer getArrivalOfTimetable(RouteTimetables routeTimetable) {
+        return routeTimetable.getLine().getStationArrival().getIdStation();
+    }
+
+    private void addStationArrivalToAdj(RouteTimetables routeTimetable) {
+        //добавляем станцию прибытия в список смежностей
+        adj.put(getDepartureOfTimetable(routeTimetable), new ArrayList<>(Collections.singletonList(getArrivalOfTimetable(routeTimetable))));
+        //добавляем отрезок к станции прибытия
+        lines.put(getDepartureOfTimetable(routeTimetable), new HashMap<>(Collections.singletonMap(getArrivalOfTimetable(routeTimetable), new ArrayList<>(Collections.singletonList(routeTimetable)))));
+    }
+
+    private void checkAndAddArrivalStationToAdj(ArrayList<Integer> stations, RouteTimetables routeTimetable) {
+        if (!stations.contains(getArrivalOfTimetable(routeTimetable))) {
+            //добавляем ее в конец списка
+            stations.add(getArrivalOfTimetable(routeTimetable));
+            adj.put(getDepartureOfTimetable(routeTimetable), stations);
+        }
+    }
+
+    private void addRouteTimetableToLines(RouteTimetables routeTimetable) {
+        //берем все отрезки выходящие из станции отправки
+        Map<Integer, ArrayList<RouteTimetables>> linesFromStationDeparture = lines.get(getDepartureOfTimetable(routeTimetable));
+
+        //берем отрезки приходящие только в станцию прибытия
+        ArrayList<RouteTimetables> linesBetweenTwoStations = linesFromStationDeparture.get(getArrivalOfTimetable(routeTimetable));
+
+        if (linesBetweenTwoStations == null) {
+            //добавляем отрезок к станции прибытия
+            linesBetweenTwoStations = new ArrayList<>(Collections.singletonList(routeTimetable));
+            //если список не пуст
+        } else {
+            //добавляем еще одно расписание отрезка
+            linesBetweenTwoStations.add(routeTimetable);
+        }
+
+        //обновляем список отрезков у промежутка станции отправки и станции прибытия
+        linesFromStationDeparture.put(getArrivalOfTimetable(routeTimetable), linesBetweenTwoStations);
+        lines.put(getDepartureOfTimetable(routeTimetable), linesFromStationDeparture);
+    }
+
+    /**
+     * Prepare data for dejksta algorithm
+     *
+     * @param startDate  date departure
+     * @param finishDate date arrival
+     */
+    private void prepareData(Date startDate, Date finishDate) {
+        stations = stationService.getAllStations();
+        List<RouteTimetables> routeTimetables = getRouteTimetablesInPeriod(startDate, finishDate);
+
+        initPropertties();
+
+        fillPropertiesWithDefaultValues();
 
         //fill adj and lines
         for (RouteTimetables routeTimetable : routeTimetables) {
 
-
             //берем список смежностей станции отправки этого отрезка
-            ArrayList<Integer> connnectedStations = adj.get(routeTimetable.getLine().getStationDeparture().getIdStation());
+            ArrayList<Integer> connnectedStations = getConnectedStationsOfDepartureStationInTimtable(routeTimetable);
+
             //если список пуст
             if (connnectedStations.size() == 0) {
-                //добавляем станцию прибытия в список смежностей
-                adj.put(routeTimetable.getLine().getStationDeparture().getIdStation(), new ArrayList<>(Collections.singletonList(routeTimetable.getLine().getStationArrival().getIdStation())));
-                //добавляем отрезок к станции прибытия
-                lines.put(routeTimetable.getLine().getStationDeparture().getIdStation(), new HashMap<>(Collections.singletonMap(routeTimetable.getLine().getStationArrival().getIdStation(), new ArrayList<>(Collections.singletonList(routeTimetable)))));
-                //если список не пуст
+
+                addStationArrivalToAdj(routeTimetable);
+
             } else {
+
                 //если станции прибытия еще нет в списке
-                if (!connnectedStations.contains(routeTimetable.getLine().getStationArrival().getIdStation())) {
-                    //добавляем ее в конец списка
-                    connnectedStations.add(routeTimetable.getLine().getStationArrival().getIdStation());
-                    adj.put(routeTimetable.getLine().getStationDeparture().getIdStation(), connnectedStations);
-                }
-                //берем все отрезки выходящие из станции отправки
-                Map<Integer, ArrayList<RouteTimetables>> currentLines = lines.get(routeTimetable.getLine().getStationDeparture().getIdStation());
-                //берем отрезки приходящие только в станцию прибытия
-                ArrayList<RouteTimetables> listOfTimetable = currentLines.get(routeTimetable.getLine().getStationArrival().getIdStation());
-                //если список пуст
-                if (listOfTimetable == null) {
-                    //добавляем отрезок к станции прибытия
-                    listOfTimetable = new ArrayList<>(Collections.singletonList(routeTimetable));
-                    //если список не пуст
-                } else {
-                    //добавляем еще одно расписание отрезка
-                    listOfTimetable.add(routeTimetable);
-                }
+                checkAndAddArrivalStationToAdj(connnectedStations, routeTimetable);
 
-                //обновляем список отрезков у промежутка станции отправки и станции прибытия
-                currentLines.put(routeTimetable.getLine().getStationArrival().getIdStation(), listOfTimetable);
-                lines.put(routeTimetable.getLine().getStationDeparture().getIdStation(), currentLines);
-            }
-        }
-
-    }
-
-    void printData() {
-        for (Station station : stations) {
-            if (dist.get(station.getIdStation()) != INF) {
-                System.out.println("Маршруты до " + station.getStationName() + ":");
-                printWay(station.getIdStation());
-            } else {
-                System.out.println("До " + station.getStationName() + " нет маршрута");
-            }
-        }
-    }
-
-    void printWay(int station) {
-        if (pred.get(station) != -1) {
-            for (RouteTimetables timetable : stationArrivingRoutes.get(station)) {
-                System.out.print(timetable + " --> ");
-                printWay(pred.get(station));
-                System.out.println();
+                addRouteTimetableToLines(routeTimetable);
             }
         }
     }
@@ -577,5 +496,74 @@ public class RouteTimetablesServiceImpl implements RouteTimetablesService {
         return routeTimetablesRepository.findByDateDepartureAfterAndDateArrivalBefore(startDate, finishDate);
     }
 
+    private void dejkstraByTime(int s, Date startDate) {
 
+        duration.put(s, (long) 0); //расстояние до начальной станции = 0
+        RouteTimetables departureDate = new RouteTimetables();
+        departureDate.setDateArrival(startDate);
+        stationArrivingRoutes.put(s, new ArrayList<>(Collections.singletonList(departureDate)));
+
+        //идём по всем станциям
+        for (int iter = 0; iter < stations.size(); ++iter) {
+            //дефолтные настройки
+            int idCurrentStation = -1;
+            Long durationToCurrentStation = (long) INF;
+
+            //БЕРЕМ СТАНЦИЮ
+            for (Station station : stations) {
+                //если использовалась - пропускаем
+                if (used.get(station.getIdStation()))
+                    continue;
+                //если до нее быстрее, чем до остальных
+                if (durationToCurrentStation < duration.get(station.getIdStation())) {
+                    continue;
+                }
+                idCurrentStation = station.getIdStation(); // номер станции
+                durationToCurrentStation = duration.get(station.getIdStation()); //время до неё
+            }
+
+            //все смежные пути
+            for (int i = 0; i < adj.get(idCurrentStation).size(); ++i) {
+                //берем смежную станцию
+                int connectedStationId = adj.get(idCurrentStation).get(i);
+                //проходимся по всем вариантам между двумя вершинами
+                for (int v = 0; v < lines.get(idCurrentStation).get(connectedStationId).size(); v++) {
+
+                    // все варианты прибытия
+                    for (RouteTimetables routeTimetableArriving : stationArrivingRoutes.get(idCurrentStation)) {
+                        //время в пути между вершинами
+                        long weightU = lines.get(idCurrentStation).get(connectedStationId).get(v).getDateArrival().getTime() -
+                                lines.get(idCurrentStation).get(connectedStationId).get(v).getDateDeparture().getTime();
+                        //время ожидания до начала движения
+                        // TODO: 29.03.17 пройтись по всем вариантам stationArrivingRoutes
+                        long weightWaiting = lines.get(idCurrentStation).get(connectedStationId).get(v).getDateDeparture().getTime() -
+//                                arrivedToStation.get(idCurrentStation).getTime();
+                                routeTimetableArriving.getDateArrival().getTime();
+                        //сумма
+                        long fullWeight = weightU + weightWaiting;
+//                      duration.get(connectedStationId) - не ясная вещь, так как потом может быть
+                        if (duration.get(idCurrentStation) + fullWeight < duration.get(connectedStationId)) { //если путь короче
+                            // если дата выезда из А позже даты приезда в неё
+                            if (routeTimetableArriving.getDateArrival().before(lines.get(idCurrentStation).get(connectedStationId).get(v).getDateDeparture())) {
+                                //добавление
+                                ArrayList<RouteTimetables> previousRT = stationArrivingRoutes.get(connectedStationId);
+                                if (previousRT.isEmpty()) {
+                                    stationArrivingRoutes.put(connectedStationId, new ArrayList<>(Collections.singletonList(lines.get(idCurrentStation).get(connectedStationId).get(v))));
+                                } else {
+                                    if (!previousRT.contains(lines.get(idCurrentStation).get(connectedStationId).get(v))) {
+                                        previousRT.add(lines.get(idCurrentStation).get(connectedStationId).get(v));
+                                        stationArrivingRoutes.put(connectedStationId, previousRT);
+                                    }
+                                }
+                                pred.put(connectedStationId, idCurrentStation);
+                                duration.put(connectedStationId, duration.get(idCurrentStation) + fullWeight);
+                            }
+                        }
+                    }
+                }
+            }
+            //помечаем вершину idCurrentStation просмотренной, до нее найдено кратчайшее расстояние
+            used.put(idCurrentStation, true);
+        }
+    }
 }
